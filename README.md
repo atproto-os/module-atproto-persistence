@@ -1,6 +1,7 @@
 # Pinia ATProto for Open Web Desktop
 
-This module enables the usage of `pinia-plugin-persistedstate-2` with `atproto` for storing Pinia state persistently.
+This module enables the usage of `pinia-plugin-persistedstate-2` with `atproto`  
+for storing Open Web Desktop states persistently on the AT Protocol.
 
 ## Installation
 
