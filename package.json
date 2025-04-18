@@ -1,0 +1,10 @@
+{
+  "name": "owd-module-pinia-atproto",
+  "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/atprotoOS/module-pinia-atproto",
+  "author": {
+    "name": "dxlliv",
+    "url": "https://github.com/dxlliv"
+  }
+}
