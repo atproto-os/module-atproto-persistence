@@ -1,8 +1,11 @@
 import {createPersistedStatePlugin} from 'pinia-plugin-persistedstate-2'
 import {useOnline} from '@vueuse/core'
-import localforage from 'localforage'
 import {getATProtoRecord, putATProtoRecord} from "@owdproject/module-atproto/runtime/utils/utilsAtprotoRepo";
 import {deepEqual} from "@owdproject/core/runtime/utils/utilsCommon";
+import {defineNuxtPlugin, useNuxtApp} from "nuxt/app"
+import {toRaw} from "vue"
+import {usePinia} from "#imports"
+import * as localforage from 'localforage'
 
 function shouldSyncWithATProto(piniaStoreKey: string) {
     const online = useOnline()
