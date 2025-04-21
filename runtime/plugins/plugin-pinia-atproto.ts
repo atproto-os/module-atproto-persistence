@@ -1,7 +1,8 @@
 import {createPersistedStatePlugin} from 'pinia-plugin-persistedstate-2'
 import {useOnline} from '@vueuse/core'
 import localforage from 'localforage'
-import {getATProtoRecord, putATProtoRecord} from "~owd-atproto/utils/utilsAtprotoRepo";
+import {getATProtoRecord, putATProtoRecord} from "@owdproject/module-atproto/runtime/utils/utilsAtprotoRepo";
+import {deepEqual} from "@owdproject/core/runtime/utils/utilsCommon";
 
 function shouldSyncWithATProto(piniaStoreKey: string) {
     const online = useOnline()
@@ -43,7 +44,6 @@ export default defineNuxtPlugin({
                         const value = await localforage.getItem(key)
 
                         if (!shouldSyncWithATProto(key)) {
-                            console.log('local', key)
                             return value
                         } else {
                             const collectionName = determineATProtoCollectionName(key)
@@ -53,7 +53,10 @@ export default defineNuxtPlugin({
                                 $atproto.agent.account?.assertDid as string,
                                 collectionName as string,
                                 key.replaceAll('/', ':')
-                            )
+                            ).catch(() => {
+                                // fallback returning local value
+                                return value
+                            })
                         }
                     },
                     setItem: async (key, value) => {
@@ -63,7 +66,7 @@ export default defineNuxtPlugin({
                         if (!shouldSyncWithATProto(key)) {
                             return value
                         } else {
-                            if (oldValue === value) {
+                            if (deepEqual(toRaw(value), toRaw(oldValue))) {
                                 return
                             }
 
@@ -88,7 +91,6 @@ export default defineNuxtPlugin({
                             return
                         }
 
-                        console.log('ATPROTO STORE DEL', key)
                         return
                     },
                 },
