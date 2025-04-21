@@ -53,10 +53,13 @@ export default defineNuxtPlugin({
                                 $atproto.agent.account?.assertDid as string,
                                 collectionName as string,
                                 key.replaceAll('/', ':')
-                            ).catch(() => {
-                                // fallback returning local value
-                                return value
-                            })
+                            )
+                                .then((response) => {
+                                    return JSON.stringify(response.data.value)
+                                })
+                                .catch(() => {
+                                    return value
+                                })
                         }
                     },
                     setItem: async (key, value) => {
@@ -77,7 +80,7 @@ export default defineNuxtPlugin({
                                 $atproto.agent.account?.assertDid as string,
                                 collectionName as string,
                                 key.replaceAll('/', ':'),
-                                value
+                                JSON.parse(value)
                             )
                         }
 
