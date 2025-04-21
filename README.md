@@ -1,4 +1,12 @@
-# Pinia ATProto for Open Web Desktop
+<p align="center">
+  <img width="160" height="160" src="https://avatars.githubusercontent.com/u/65117737?s=160&v=4" />
+</p>
+<h1 align="center">ATProto Store Module</h1>
+<h3 align="center">
+  ATProto Store Module for your Open Web Desktop client.
+</h3>
+
+## Overview
 
 This module enables the usage of `pinia-plugin-persistedstate-2` with `atproto`  
 for storing Open Web Desktop states persistently on the AT Protocol.
@@ -8,7 +16,7 @@ for storing Open Web Desktop states persistently on the AT Protocol.
 To install the module, run:
 
 ```sh
-npm install owd-module-pinia-atproto
+npm install @owdproject/module-pinia-atproto
 ```
 
 ## Usage
@@ -26,6 +34,11 @@ export default defineNuxtConfig({
 - Enables persistent storage for Pinia stores
 - Works seamlessly with Nuxt
 
+## Compatibility
+
+The application is compatible with Open Web Desktop client version `3.0.0-alpha.6`.
+
 ## License
-Open Web Desktop is licensed under the [GNU General Public License v3](LICENSE).
+
+Open Web Desktop is released under the [GNU General Public License v3](LICENSE).
 
