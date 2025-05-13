@@ -4,13 +4,12 @@ import {deepEqual} from "@owdproject/core/runtime/utils/utilCommon";
 import {defineNuxtPlugin, useNuxtApp} from "nuxt/app"
 import {toRaw} from "vue"
 import {usePinia} from "#imports"
-import * as localforage from 'localforage'
+import localforage from 'localforage'
 import {
     getAtprotoApplicationState,
     putAtprotoApplicationState,
     listAtprotoApplicationStateRecords, parseAtprotoStoreKey
-} from "../utils/utilAtprotoApplications";
-
+} from "./utils/utilAtprotoApplications";
 
 function shouldSyncWithATProto(
     piniaStoreKey: string,
