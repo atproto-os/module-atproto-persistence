@@ -3,8 +3,9 @@ import {useOnline} from '@vueuse/core'
 import {deepEqual} from "@owdproject/core/runtime/utils/utilCommon";
 import {defineNuxtPlugin, useNuxtApp} from "nuxt/app"
 import {toRaw} from "vue"
+import {useAtproto} from "#imports"
 import {usePinia} from "#imports"
-import localforage from 'localforage'
+import localforage from 'localforage/src/localforage.js'
 import {
     getAtprotoApplicationState,
     putAtprotoApplicationState,
