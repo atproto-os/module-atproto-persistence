@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="160" height="160" src="https://avatars.githubusercontent.com/u/65117737?s=160&v=4" />
+  <img width="160" height="160" src="https://avatars.githubusercontent.com/u/201536780?s=160&v=4" />
 </p>
 <h1 align="center">ATProto Store Module</h1>
 <h3 align="center">
