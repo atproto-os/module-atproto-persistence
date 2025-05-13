@@ -34,10 +34,6 @@ export default defineNuxtConfig({
 - Enables persistent storage for Pinia stores
 - Works seamlessly with Nuxt
 
-## Compatibility
-
-The application is compatible with Open Web Desktop client version `3.0.0-alpha.6`.
-
 ## License
 
 Open Web Desktop is released under the [GNU General Public License v3](LICENSE).
