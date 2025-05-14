@@ -12,6 +12,6 @@
     "pinia-plugin-persistedstate-2": "^2.0.30"
   },
   "peerDependencies": {
-    "@owdproject/core": "3.1.0"
+    "@owdproject/core": "^3.1.0"
   }
 }
