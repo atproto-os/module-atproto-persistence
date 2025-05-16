@@ -19,7 +19,7 @@ for storing Open Web Desktop states persistently on the AT Protocol.
 ## Installation
 
 ```bash
-nx run desktop:install-module --name=@owdproject/module-pinia-atproto
+owd install-module @owdproject/module-pinia-atproto
 ```
 
 ## License
