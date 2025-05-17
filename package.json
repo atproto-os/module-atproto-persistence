@@ -1,6 +1,6 @@
 {
   "name": "@owdproject/module-atproto-persistence",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "homepage": "https://github.com/atproto-os/module-atproto-persistence",
   "author": {

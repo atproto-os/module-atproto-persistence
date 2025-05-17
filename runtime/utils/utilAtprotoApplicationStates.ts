@@ -1,6 +1,4 @@
-import { useDesktopStore } from '@owdproject/core/runtime/stores/storeDesktop'
-import { useApplicationWindowsStore } from '@owdproject/core/runtime/stores/storeApplicationWindows'
-import { useApplicationMetaStore } from '@owdproject/core/runtime/stores/storeApplicationMeta'
+import { resolveActorServiceEndpoint, useAgent } from "#imports"
 
 export function parseAtprotoStoreKey(
   key: string,
