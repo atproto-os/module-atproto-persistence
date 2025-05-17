@@ -2,28 +2,40 @@ import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'
 import { deepEqual } from '@owdproject/core/runtime/utils/utilCommon'
 import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app'
 import { toRaw } from 'vue'
-import { usePinia, useAtproto } from '#imports'
+import { usePinia, useRouter, useAtproto } from '#imports'
 
 import localforage from 'localforage/src/localforage.js'
 import {
-  loadActorDesktop,
   putAtprotoApplicationState,
   parseAtprotoStoreKey,
+  loadActorDesktopStateMap
 } from './utils/utilAtprotoApplicationStates'
 
 export default defineNuxtPlugin({
   name: 'owd-plugin-atproto-persistence',
   dependsOn: ['owd-plugin-atproto'],
-  async setup(nuxt) {
+  async setup() {
     const pinia = usePinia()
     const atproto = useAtproto()
     const runtimeConfig = useRuntimeConfig()
+    const router = useRouter()
 
-    if (
-      runtimeConfig.public.atprotoPersistence &&
-      runtimeConfig.public.atprotoPersistence.loadOwnerDesktopOnMounted
-    ) {
-      loadActorDesktop(runtimeConfig.public.atprotoDesktop.owner.did)
+    let states = {}
+    let actorDid = undefined
+
+    if (router.currentRoute.value.params.did) {
+      actorDid = router.currentRoute.value.params.did
+    } else {
+      if (
+        runtimeConfig.public.atprotoPersistence &&
+        runtimeConfig.public.atprotoPersistence.loadOwnerDesktopOnMounted
+      ) {
+        actorDid = runtimeConfig.public.atprotoDesktop.owner.did
+      }
+    }
+
+    if (actorDid) {
+      states = await loadActorDesktopStateMap(runtimeConfig.public.atprotoDesktop.owner.did)
     }
 
     pinia.use(
@@ -31,6 +43,11 @@ export default defineNuxtPlugin({
         persist: false,
         storage: {
           getItem: async (piniaKey) => {
+
+            if (states.hasOwnProperty(piniaKey)) {
+              return JSON.stringify(states[piniaKey])
+            }
+
             return localforage.getItem(piniaKey)
           },
           setItem: async (piniaKey, piniaValue) => {

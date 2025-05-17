@@ -79,7 +79,7 @@ export function putAtprotoApplicationState(
  *
  * @param actorDid
  */
-export async function loadActorDesktop(actorDid: string) {
+export async function loadActorDesktopStateMap(actorDid: string) {
   const actorServiceEndpoint = await resolveActorServiceEndpoint(actorDid)
   const actorAgent = useAgent(actorServiceEndpoint)
 
@@ -106,48 +106,35 @@ export async function loadActorDesktop(actorDid: string) {
     ),
   ])
 
-  // load actor applications desktop settings
-  if (atprotoActorDesktopRecord.status === 'fulfilled') {
-    // todo validate
+  const stateMap: Record<string, any> = {}
 
-    if (
-      atprotoActorDesktopRecord.value &&
-      atprotoActorDesktopRecord.value.data
-    ) {
-      useDesktopStore().$patch(atprotoActorDesktopRecord.value.data.value.state)
-    }
+  // desktop state
+  if (
+    atprotoActorDesktopRecord.status === 'fulfilled' &&
+    atprotoActorDesktopRecord.value?.data
+  ) {
+    stateMap['owd/desktop'] = atprotoActorDesktopRecord.value.data.value
   }
 
-  let applicationWindowsStore
-  let applicationMetaStore
-
-  // load actor applications windows
+  // windows state
   if (atprotoApplicationWindowsList.status === 'fulfilled') {
-    for (const atprotoApplicationWindowRecord of atprotoApplicationWindowsList.value) {
-      const atprotoApplicationId = atprotoApplicationWindowRecord.uri
-        .split('/')
-        .pop()
-
-      applicationWindowsStore = useApplicationWindowsStore(atprotoApplicationId)
-
-      applicationWindowsStore.$patch({
-        windows: atprotoApplicationWindowRecord.value.windows,
-      })
+    for (const record of atprotoApplicationWindowsList.value) {
+      const appId = record.uri.split('/').pop()
+      stateMap[`owd/application/${appId}/windows`] = {
+        windows: record.value.windows,
+      }
     }
   }
 
-  // load actor applications meta
+  // meta state
   if (atprotoApplicationMetaList.status === 'fulfilled') {
-    for (const atprotoApplicationMetaRecord of atprotoApplicationMetaList.value) {
-      const atprotoApplicationId = atprotoApplicationMetaRecord.uri
-        .split('/')
-        .pop()
-
-      applicationMetaStore = useApplicationMetaStore(atprotoApplicationId)()
-
-      applicationMetaStore.$patch({
-        ...atprotoApplicationMetaRecord.value,
-      })
+    for (const record of atprotoApplicationMetaList.value) {
+      const appId = record.uri.split('/').pop()
+      stateMap[`owd/application/${appId}/meta`] = {
+        ...record.value,
+      }
     }
   }
+
+  return stateMap
 }
