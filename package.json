@@ -1,8 +1,8 @@
 {
-  "name": "@owdproject/module-pinia-atproto",
+  "name": "@owdproject/module-atproto-persistence",
   "version": "0.0.1",
   "license": "MIT",
-  "homepage": "https://github.com/atproto-os/module-pinia-atproto",
+  "homepage": "https://github.com/atproto-os/module-atproto-persistence",
   "author": {
     "name": "Open Web Desktop Team",
     "url": "https://github.com/owdproject"
