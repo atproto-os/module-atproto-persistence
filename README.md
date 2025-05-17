@@ -12,6 +12,7 @@ This module enables the usage of `pinia-plugin-persistedstate-2` with `atproto`
 for storing Open Web Desktop states persistently on the AT Protocol.
 
 ## Features
+
 - Configures `pinia-plugin-persistedstate-2` to use `atproto`
 - Enables persistent storage for Pinia stores
 - Works seamlessly with Nuxt
