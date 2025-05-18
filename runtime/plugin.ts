@@ -2,7 +2,7 @@ import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'
 import { deepEqual } from '@owdproject/core/runtime/utils/utilCommon'
 import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app'
 import { toRaw } from 'vue'
-import { usePinia, useRouter, useAtproto } from '#imports'
+import { usePinia, useRouter, useAtproto, useAgent } from '#imports'
 
 import localforage from 'localforage/src/localforage.js'
 import {
@@ -56,7 +56,7 @@ export default defineNuxtPlugin({
 
             const atprotoTargetRecord = parseAtprotoStoreKey(piniaKey)
 
-            if (!atprotoTargetRecord || !atproto.agent.account) {
+            if (!atprotoTargetRecord || !atproto.isLogged()) {
               return piniaValue
             }
 
@@ -66,9 +66,11 @@ export default defineNuxtPlugin({
               return piniaValue
             }
 
+            const agent = useAgent('private')
+
             return putAtprotoApplicationState(
-              atproto.agent.account,
-              atproto.agent.account.assertDid,
+              agent,
+              agent.assertDid,
               collection,
               rkey,
               JSON.parse(piniaValue),

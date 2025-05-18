@@ -60,12 +60,13 @@ export function getAtprotoApplicationState(
 
 export function putAtprotoApplicationState(
   agent: any,
+  repo: string,
   collection: string,
   rkey: string,
   record: any,
 ) {
   return agent.com.atproto.repo.putRecord({
-    repo: agent?.assertDid as string,
+    repo,
     collection,
     rkey,
     record,
