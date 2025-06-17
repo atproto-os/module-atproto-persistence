@@ -23,6 +23,10 @@ for storing Open Web Desktop states persistently on the AT Protocol.
 owd install-module @owdproject/module-pinia-atproto
 ```
 
+## Requirements
+
+- [@owdproject/module-atproto](https://github.com/atproto-os/module-atproto)
+
 ## License
 
 This module is released under the [MIT License](LICENSE).
