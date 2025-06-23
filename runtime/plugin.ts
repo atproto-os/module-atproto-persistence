@@ -27,15 +27,15 @@ export default defineNuxtPlugin({
       actorDid = router.currentRoute.value.params.did
     } else {
       if (
-        runtimeConfig.public.atprotoPersistence &&
-        runtimeConfig.public.atprotoPersistence.loadOwnerDesktopOnMounted
+        runtimeConfig.public.desktop.atprotoPersistence &&
+        runtimeConfig.public.desktop.atprotoPersistence.loadOwnerDesktopOnMounted
       ) {
-        actorDid = runtimeConfig.public.atprotoDesktop.owner.did
+        actorDid = runtimeConfig.public.desktop.atprotoDesktop.owner.did
       }
     }
 
     if (actorDid) {
-      states = await loadActorDesktopStateMap(runtimeConfig.public.atprotoDesktop.owner.did)
+      states = await loadActorDesktopStateMap(runtimeConfig.public.desktop.atprotoDesktop.owner.did)
     }
 
     pinia.use(

@@ -12,7 +12,7 @@ export default defineNuxtModule({
     const { resolve } = createResolver(import.meta.url)
 
     // set runtime config
-    _nuxt.options.runtimeConfig.public.atprotoPersistence = _options
+    _nuxt.options.runtimeConfig.public.desktop.atprotoPersistence = _options
 
     addPlugin({
       src: resolve('./runtime/plugin'),
