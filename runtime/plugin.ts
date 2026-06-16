@@ -2,40 +2,39 @@ import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'
 import { deepEqual } from '@owdproject/core/runtime/utils/utilCommon'
 import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app'
 import { toRaw } from 'vue'
-import { usePinia, useRouter, useAtproto, useAgent } from '#imports'
+import { useAtprotoSession, useAtprotoAgent } from '#imports'
 
 import localforage from 'localforage/src/localforage.js'
 import {
   putAtprotoApplicationState,
   parseAtprotoStoreKey,
-  loadActorDesktopStateMap
+  loadActorDesktopStateMap,
 } from './utils/utilAtprotoApplicationStates'
 
 export default defineNuxtPlugin({
-  name: 'owd-plugin-atproto-persistence',
-  dependsOn: ['owd-plugin-atproto'],
-  async setup() {
-    const pinia = usePinia()
-    const atproto = useAtproto()
+  name: 'desktop-plugin-atproto-persistence',
+  dependsOn: ['desktop-plugin-atproto'],
+  async setup(nuxtApp) {
+    const pinia = nuxtApp.$pinia
+    const { isLogged } = useAtprotoSession()
     const runtimeConfig = useRuntimeConfig()
     const router = useRouter()
 
-    let states = {}
-    let actorDid = undefined
+    let states: Record<string, any> = {}
+    let actorDid: string | undefined
 
     if (router.currentRoute.value.params.did) {
-      actorDid = router.currentRoute.value.params.did
+      actorDid = router.currentRoute.value.params.did as string
     } else {
       if (
-        runtimeConfig.public.desktop.atprotoPersistence &&
-        runtimeConfig.public.desktop.atprotoPersistence.loadOwnerDesktopOnMounted
+        runtimeConfig.public.desktop.atprotoPersistence?.loadOwnerDesktopOnMounted
       ) {
-        actorDid = runtimeConfig.public.desktop.atprotoDesktop.owner.did
+        actorDid = runtimeConfig.public.desktop.atprotoDesktop?.owner.did
       }
     }
 
     if (actorDid) {
-      states = await loadActorDesktopStateMap(runtimeConfig.public.desktop.atprotoDesktop.owner.did)
+      states = await loadActorDesktopStateMap(actorDid)
     }
 
     pinia.use(
@@ -43,8 +42,7 @@ export default defineNuxtPlugin({
         persist: false,
         storage: {
           getItem: async (piniaKey) => {
-
-            if (states.hasOwnProperty(piniaKey)) {
+            if (Object.prototype.hasOwnProperty.call(states, piniaKey)) {
               return JSON.stringify(states[piniaKey])
             }
 
@@ -56,7 +54,7 @@ export default defineNuxtPlugin({
 
             const atprotoTargetRecord = parseAtprotoStoreKey(piniaKey)
 
-            if (!atprotoTargetRecord || !atproto.isLogged()) {
+            if (!atprotoTargetRecord || !isLogged.value) {
               return piniaValue
             }
 
@@ -66,7 +64,7 @@ export default defineNuxtPlugin({
               return piniaValue
             }
 
-            const agent = useAgent('private')
+            const agent = useAtprotoAgent('authenticated')
 
             return putAtprotoApplicationState(
               agent,
