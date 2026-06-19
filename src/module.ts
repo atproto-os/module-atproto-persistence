@@ -12,8 +12,6 @@ export default defineDesktopModule({
   setup(_options, _nuxt) {
     const { resolve } = createResolver(import.meta.url)
 
-    _nuxt.options.runtimeConfig.public.desktop.atprotoPersistence = _options
-
     addPlugin({
       src: resolve('./runtime/plugin'),
       mode: 'client',
