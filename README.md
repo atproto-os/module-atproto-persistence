@@ -8,27 +8,20 @@
 
 ## Overview
 
-This module extends the Open Web Desktop persistence layer with AT Protocol
-support. Desktop state (windows, app positions, app settings) is stored locally
-via `localforage` (IndexedDB) and optionally synced to the user's AT Protocol
-repository as lexicon records.
+This module registers a Pinia persisted-state adapter backed by **IndexedDB**
+(`idb-keyval`) with optional sync to the user's AT Protocol repository. It
+replaces `@owdproject/module-persistence` — **do not install both** in the same
+desktop.
 
-When a user visits another actor's desktop (e.g. `/actor/<did>`), the module
-fetches that actor's state from their ATProto repository and hydrates the Pinia
-stores before rendering.
-
-## Features
-
-- Local-first storage via `localforage` (IndexedDB)
-- Transparent sync to the AT Protocol repo on every Pinia state change
-- Reads a remote actor's desktop state for public desktop viewing
-- Dual-prefix compatibility: migrates legacy `owd/` Pinia key prefixes to `desktop/` automatically
-- Selective sync: only stores that map to AT Proto collections are synced remotely
+Boot order is handled without core coupling: the plugin runs in Nuxt's **pre**
+phase (registers the adapter only). Remote hydration runs **lazily** on the first
+`getItem`, after the `atproto` OAuth plugin has finished init. Core and apps
+already await `$persistedState.isReady()` before restoring windows.
 
 ## Requirements
 
-- `@owdproject/core` ≥ 3.4.0
-- `@owdproject/module-atproto` ≥ 0.0.1
+- `@owdproject/core` ^3.4.0
+- `@owdproject/module-atproto` (provides OAuth session and agents)
 
 ## Installation
 
@@ -41,37 +34,26 @@ pnpm desktop add module-atproto-persistence
 ```ts
 // desktop/desktop.config.ts
 export default defineDesktopConfig({
+  modules: [
+    '@owdproject/module-atproto',
+    '@owdproject/module-atproto-persistence',
+  ],
   atprotoPersistence: {
-    // When true, load the desktop owner's remote state on app mount
-    // (in addition to loading it when navigating to /actor/<did>)
+    // Load atprotoDesktop.owner.did remote state on boot (not only /actor/:did)
     loadOwnerDesktopOnMounted: false,
   },
 })
 ```
 
-## How it works
+## Actor resolution (remote hydrate)
 
-### Local storage
+On first store read, remote state is fetched once per boot when an actor DID is
+resolved:
 
-All Pinia stores with `persistedState: { persist: true }` are stored locally
-in IndexedDB via `localforage`. This is the primary storage layer and always
-takes effect regardless of AT Protocol session state.
-
-### Remote sync (AT Protocol)
-
-When the user is logged in (`useAtprotoSession().isLogged`), every `setItem`
-call checks whether the Pinia store key maps to a known AT Proto collection.
-If it does, the state is written to the user's AT Protocol repository via
-`com.atproto.repo.putRecord`.
-
-The mapping is defined in `parseAtprotoStoreKey` (see table below).
-
-### Remote hydration
-
-When navigating to `/actor/<did>` (or on mount when `loadOwnerDesktopOnMounted`
-is true), the module fetches the actor's desktop state from their AT Protocol
-repository via `com.atproto.repo.getRecord` / `com.atproto.repo.listRecords`,
-and pre-populates the state map used by the Pinia persistence plugin.
+1. Route `/actor/:did` — view another actor's desktop
+2. Logged-in session — `session.sub`
+3. `loadOwnerDesktopOnMounted: true` — `atprotoDesktop.owner.did`
+4. Otherwise — IndexedDB only
 
 ## AT Protocol collections
 
@@ -81,21 +63,8 @@ and pre-populates the state map used by the Pinia persistence plugin.
 | `desktop/application/<appId>/windows` | `org.owdproject.application.windows` | `<appId>` |
 | `desktop/application/<appId>/meta` | `org.owdproject.application.meta` | `<appId>` |
 
-> **Backward compatibility**: legacy `owd/` Pinia key prefixes (OWD < 3.4) are
-> automatically normalised to `desktop/` before the AT Proto mapping is applied.
-> No data loss occurs during the migration.
-
-Extension modules that store data in AT Proto should use `desktop/<module>/...`
-Pinia ids and add their own collection entries to `parseAtprotoStoreKey` if needed.
-
-## Relation to `@owdproject/module-persistence`
-
-`@owdproject/module-persistence` is the base persistence module and uses
-`idb-keyval` for simple IndexedDB key/value storage.
-
-This module replaces that layer entirely with a custom storage adapter based on
-`localforage` that adds the AT Protocol sync logic. **Do not install both modules**
-in the same desktop — this module already provides local persistence.
+When logged in, mapped keys are written to the repo on change (`putRecord`).
+Unmapped keys stay local-only.
 
 ## License
 

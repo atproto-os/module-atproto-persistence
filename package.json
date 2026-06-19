@@ -1,18 +1,59 @@
 {
   "name": "@owdproject/module-atproto-persistence",
   "version": "0.0.4",
+  "description": "Pinia persistence via AT Protocol repository, ESM-friendly",
   "license": "MIT",
   "homepage": "https://github.com/atproto-os/module-atproto-persistence",
   "author": {
     "name": "Open Web Desktop Team",
     "url": "https://github.com/owdproject"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "development": "./src/module.ts",
+      "import": "./dist/module.mjs"
+    }
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "nx": {
+    "name": "module-atproto-persistence"
+  },
+  "scripts": {
+    "prepack": "nuxt-module-build build",
+    "dev": "pnpm run dev:prepare && cd playground && pnpm exec nuxt dev",
+    "dev:build": "nuxt build playground",
+    "dev:generate": "NUXT_APP_BASE_URL=${NUXT_APP_BASE_URL:-/module-atproto-persistence/} nuxt generate playground",
+    "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && cd playground && pnpm exec nuxt prepare",
+    "validate": "desktop validate ."
+  },
   "dependencies": {
-    "localforage": "^1.10.0",
+    "@nuxt/kit": "^4.4.4",
+    "idb-keyval": "^6.2.2",
     "pinia-plugin-persistedstate-2": "^2.0.30"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "^1.0.2",
+    "@owdproject/app-todo": "workspace:*",
+    "@owdproject/core": "workspace:*",
+    "nuxt": "^4.4.4",
+    "pinia": "^3.0.0",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
     "@owdproject/core": "^3.4.0",
-    "@owdproject/module-atproto": "^0.0.1"
+    "@owdproject/module-atproto": "^0.0.6",
+    "pinia": "^3.0.0"
   }
 }

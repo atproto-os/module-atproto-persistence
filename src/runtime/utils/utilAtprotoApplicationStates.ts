@@ -1,10 +1,20 @@
-import { resolveActorServiceEndpoint, useAtprotoAgent } from '#imports'
+import { useAtprotoAgent, useAtprotoSession } from '#imports'
+
+/** Resolve PDS endpoint via PLC directory (Bluesky); custom PDSs use the same DID document shape. */
+export async function resolveActorServiceEndpoint(did: string): Promise<string> {
+  const response = await fetch(`https://plc.directory/${did}`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch profile service endpoint')
+  }
+
+  const data = await response.json()
+
+  return data.service[0].serviceEndpoint
+}
 
 /**
- * Maps an ATProto Pinia store key to an AT Protocol collection and rkey.
- *
- * Supports both the current `desktop/` prefix (OWD ≥ 3.4) and the legacy
- * `owd/` prefix for backward compatibility with existing stored data.
+ * Maps a Pinia store id to an AT Protocol collection and rkey.
  *
  * Key format → AT Proto mapping:
  * - `desktop/application/<appId>/windows` → collection: `org.owdproject.application.windows`, rkey: `<appId>`
@@ -16,19 +26,8 @@ import { resolveActorServiceEndpoint, useAtprotoAgent } from '#imports'
 export function parseAtprotoStoreKey(
   key: string,
 ): { collection: string; rkey: string } | null {
-  // Normalise: strip legacy `owd/` prefix to `desktop/` equivalent
-  let normalised = key
-  if (key === 'owd/desktop') {
-    normalised = 'desktop'
-  } else if (key.startsWith('owd/application/')) {
-    normalised = key.replace(/^owd\/application\//, 'desktop/application/')
-  } else if (key.startsWith('owd/')) {
-    normalised = key.replace(/^owd\//, 'desktop/')
-  }
-
-  // desktop/application/<appId>/windows|meta
-  if (normalised.startsWith('desktop/application/')) {
-    const parts = normalised.split('/')
+  if (key.startsWith('desktop/application/')) {
+    const parts = key.split('/')
     const last = parts[parts.length - 1]
 
     if (last === 'windows' || last === 'meta') {
@@ -40,11 +39,9 @@ export function parseAtprotoStoreKey(
     }
   }
 
-  // desktop (or desktop/<sub>)
-  if (normalised === 'desktop' || normalised.startsWith('desktop/')) {
-    const sub = normalised.split('/')[1] ?? 'self'
-    // Exclude nested paths already handled above
-    if (!normalised.startsWith('desktop/application/')) {
+  if (key === 'desktop' || key.startsWith('desktop/')) {
+    const sub = key.split('/')[1] ?? 'self'
+    if (!key.startsWith('desktop/application/')) {
       return {
         collection: 'org.owdproject.desktop',
         rkey: sub,
@@ -100,27 +97,29 @@ export function putAtprotoApplicationState(
 
 /**
  * Loads the full desktop state map for a given actor from the AT Protocol
- * repository. Returns a map keyed by Pinia store id (OWD 3.4 `desktop/` prefix).
- *
- * Fetches three collections in parallel:
- * - `org.owdproject.desktop` → `desktop`
- * - `org.owdproject.application.windows` → `desktop/application/<appId>/windows`
- * - `org.owdproject.application.meta`    → `desktop/application/<appId>/meta`
+ * repository. Returns a map keyed by Pinia store id (`desktop/` prefix).
  */
-export async function loadActorDesktopStateMap(actorDid: string) {
-  const actorServiceEndpoint = await resolveActorServiceEndpoint(actorDid)
-  const actorAgent = useAtprotoAgent(actorServiceEndpoint)
+export async function loadActorDesktopStateMap(nuxtApp: any, actorDid: string) {
+  const { isLogged, session } = nuxtApp.runWithContext(() => useAtprotoSession())
+  const isOwner = isLogged.value && session.value?.sub === actorDid
+
+  let actorAgent
+  if (isOwner) {
+    actorAgent = nuxtApp.runWithContext(() => useAtprotoAgent('authenticated'))
+  } else {
+    const actorServiceEndpoint = await resolveActorServiceEndpoint(actorDid)
+    actorAgent = nuxtApp.runWithContext(() => useAtprotoAgent(actorServiceEndpoint))
+  }
 
   const [
-    atprotoActorDesktopRecord,
+    atprotoActorDesktopList,
     atprotoApplicationWindowsList,
     atprotoApplicationMetaList,
   ] = await Promise.allSettled([
-    getAtprotoApplicationState(
+    listAtprotoApplicationStateRecords(
       actorAgent,
       actorDid,
       'org.owdproject.desktop',
-      'self',
     ),
     listAtprotoApplicationStateRecords(
       actorAgent,
@@ -136,29 +135,27 @@ export async function loadActorDesktopStateMap(actorDid: string) {
 
   const stateMap: Record<string, any> = {}
 
-  // desktop state — keyed as `desktop` (OWD 3.4 Pinia id)
-  if (
-    atprotoActorDesktopRecord.status === 'fulfilled' &&
-    atprotoActorDesktopRecord.value?.data
-  ) {
-    stateMap['desktop'] = atprotoActorDesktopRecord.value.data.value
+  if (atprotoActorDesktopList.status === 'fulfilled') {
+    for (const record of atprotoActorDesktopList.value) {
+      const rkey = record.uri.split('/').pop()
+      const piniaKey = rkey === 'self' ? 'owd/desktop' : `owd/desktop/${rkey}`
+      stateMap[piniaKey] = record.value
+    }
   }
 
-  // windows state
   if (atprotoApplicationWindowsList.status === 'fulfilled') {
     for (const record of atprotoApplicationWindowsList.value) {
       const appId = record.uri.split('/').pop()
-      stateMap[`desktop/application/${appId}/windows`] = {
+      stateMap[`owd/application/${appId}/windows`] = {
         windows: record.value.windows,
       }
     }
   }
 
-  // meta state
   if (atprotoApplicationMetaList.status === 'fulfilled') {
     for (const record of atprotoApplicationMetaList.value) {
       const appId = record.uri.split('/').pop()
-      stateMap[`desktop/application/${appId}/meta`] = {
+      stateMap[`owd/application/${appId}/meta`] = {
         ...record.value,
       }
     }
